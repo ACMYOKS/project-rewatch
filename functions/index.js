@@ -2,9 +2,10 @@ const functions = require('firebase-functions');
 const https = require('https');
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
-const s_searcher = require('./util/script-searcher.js');
+const YTSeacher = require('./util/script-searcher.js');
 
-admin.initializeApp(functions.config().firebase);
+// admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
 
 const db = admin.firestore();
 
@@ -17,9 +18,6 @@ exports.getYtInfo = functions.https.onRequest(async (req, res) => {
 		try {
 			const info = await fetch('https://www.youtube.com/get_video_info?video_id='+vid);
 			const body = await info.text();
-			functions.logger.info("get YouTube info", {
-				content: body
-			});	
 			const infoPairs = body.split('&');
 			let infoMap = {};
 			infoPairs.forEach((pair) => {
@@ -32,16 +30,12 @@ exports.getYtInfo = functions.https.onRequest(async (req, res) => {
 				// player response not exists
 				throw new functions.https.HttpsError('not-found', 'Absence of "player_response" in YouTube info');
 			} else {
-				if (infoMap.player_response.includes("signature") || infoMap.player_response.includes("signatureCipher")) {
-					// do fetch player script and find decypt
-				}
 				let playerResJson;
 				try {
 					playerResJson = JSON.parse(decodeURIComponent(infoMap.player_response));
 				} catch(e) {
 					throw new functions.https.HttpsError('internal', e.message);
 				}
-				functions.logger.info("player_response", playerResJson);
 				let resultMap = {};
 				const vd = playerResJson.videoDetails;
 				const sd = playerResJson.streamingData;
@@ -67,18 +61,29 @@ exports.getYtInfo = functions.https.onRequest(async (req, res) => {
 				resultMap.formats = [];
 				resultMap.adaptiveFormats = [];
 				if (formats.some((i) => 'signatureCipher' in i || 'cipher' in i)) {
-					// use player script to dicipher url
+					// use player script to decrypt url
 					try {
 						const embededPage = await fetch('https://www.youtube.com/embed/' + vid);
 						const embededPageBody = await embededPage.text();
-						const scriptUrl = s_searcher.getScriptUrl(embededPageBody);
-						const script = await fetch(scriptUrl);
-						const scriptBody = await script.text();
-						functions.logger.info({url: scriptUrl});
-						const searcher = new s_searcher.Searcher(scriptBody);
-						const codes = searcher.decipherCode;
+						const scriptUrl = YTSeacher.getScriptUrl(embededPageBody);
+						const docRef = db.collection('decrypt_scripts').doc(encodeURIComponent(scriptUrl));
+						const docData = await docRef.get();
+						let codes = null;
+						if (docData.exists) {
+							functions.logger.info('use db record');
+							codes = docData.data();
+						} else {
+							const script = await fetch('https://www.youtube.com' + scriptUrl);
+							const scriptBody = await script.text();
+							functions.logger.info({url: scriptUrl});
+							const searcher = new YTSeacher.Searcher(scriptBody);
+							codes = searcher.decipherCode;
+							codes.createdAt = admin.firestore.Timestamp.now();
+							functions.logger.info('add new record to db');
+							await docRef.set(codes);
+						}
 						functions.logger.info({code: codes});
-						const decrypter = new s_searcher.Decrypter(codes);
+						const decrypter = new YTSeacher.Decrypter(codes);
 						formats.forEach((f) => {
 							if (f.mimeType && f.mimeType.includes('mp4')) {
 								const cipher = f.signatureCipher ?? f.cipher;
@@ -111,28 +116,18 @@ exports.getYtInfo = functions.https.onRequest(async (req, res) => {
 						});
 					}
 				} else {
-					resultMap.formats = formats.reduce((acc, f) => {
+					formats.forEach((f) => {
 						// only get mp4 streaming formats
 						if (f.mimeType && f.mimeType.includes('mp4')) {
-							return acc.concat({
-								itag: f.itag,
-								url: f.url
-							});
-						} else {
-							return acc;
+							resultMap.formats.push({itag: f.itag, url: f.url});
 						}
-					}, []);
-					resultMap.adaptiveFormats = aFormats.reduce((acc, f) => {
+					});
+					aFormats.forEach((f) => {
 						// only get mp4 streaming formats
 						if (f.mimeType && f.mimeType.includes('mp4')) {
-							return acc.concat({
-								itag: f.itag,
-								url: f.url
-							});
-						} else {
-							return acc;
+							resultMap.adaptiveFormats.push({itag: f.itag, url: f.url});
 						}
-					}, []);
+					});
 				}
 				res.status(200).json({data:resultMap});
 			}
