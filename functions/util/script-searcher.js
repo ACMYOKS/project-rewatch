@@ -1,3 +1,6 @@
+'use strict';
+
+const vm = require('vm');
 const DEBUG = true;
 
 const getScriptUrl = function(embededPage) {
@@ -28,35 +31,35 @@ const Searcher = function(script) {
 		if (!entryFunc) throw new Error('Cannot find entry function for decryption');
 		const entryFuncCode = _getVarDefinition(entryFunc);
 		printLog(`varName: ${entryFunc}, def: ${entryFuncCode}`);
-		const funcList = [entryFuncCode];
+		let funcList = [entryFuncCode];
 		let maxAllowedTry = 100;
-		return (function () {
-			eval(entryFuncCode);
-			do {
-				try {
-					--maxAllowedTry;
-					printLog('eval entry function: ' + maxAllowedTry);
-					eval(entryFunc)('_dummy_string_');
-					break;
-				} catch (e) {
-					if (e.name === 'ReferenceError') {
-						const fname = _getUndefinedVarName(e.message);
-						const fcode = _getVarDefinition(fname);
-						printLog(`varName: ${fname}, def: ${fcode}`);
-						eval(fcode);
-						funcList.push(fcode);
-					} else {
-						printLog(`Unknown error: ${e}`);
-						throw e;
-					}
+		let vmCtx = {};
+		vm.createContext(vmCtx);
+		vm.runInContext(entryFuncCode, vmCtx);
+		do {
+			try {
+				--maxAllowedTry;
+				printLog('eval entry function: ' + maxAllowedTry);
+				vm.runInContext(`${entryFunc}('_dummy_string_')`, vmCtx);
+				break;
+			} catch (e) {
+				if (e.name === 'ReferenceError') {
+					const fname = _getUndefinedVarName(e.message);
+					const fcode = _getVarDefinition(fname);
+					printLog(`varName: ${fname}, def: ${fcode}`);
+					vm.runInContext(fcode, vmCtx);
+					funcList.push(fcode);
+				} else {
+					printLog(`Unknown error: ${e}`);
+					throw e;
 				}
-			} while (maxAllowedTry > 0)
-			if (maxAllowedTry === 0) throw new Error('Cannot obtain decrypt function within 100 tries');
-			return {
-				entry: entryFunc,
-				code: funcList.join('\n')
-			};
-		})();
+			}
+		} while (maxAllowedTry > 0)
+		if (maxAllowedTry === 0) throw new Error('Cannot obtain decrypt function within 100 tries');
+		return {
+			entry: entryFunc,
+			code: funcList.join('\n')
+		};
 	}
 	const _getUndefinedVarName = function(errMsg) {
 		printLog(`getUndefinedVarName: ${errMsg}`)
@@ -131,8 +134,10 @@ const Searcher = function(script) {
 };
 
 const Decrypter = function(decipherCode) {
-	eval(decipherCode.code);
-	const decipher = eval(decipherCode.entry);
+	let vmCtx = {};
+	vm.createContext(vmCtx);
+	vm.runInContext(decipherCode.code, vmCtx);
+	const decipher = vm.runInContext(decipherCode.entry, vmCtx);
 	this.getDecryptedUrl = function(cipher) {
 		// cipher contains 3 url parameters: s(encrypted signature), sp(param to be added to result url), url
 		const params = cipher.split('&');
