@@ -1,0 +1,21 @@
+{
+	"latestVersion": "1.0.0",
+	"latestVersionCode": 1,
+	"releaseList": [
+		{
+			"version": "1.0.0",
+			"versionCode": 1,
+			"url": "https://project-rewatch.firebaseapp.com/archive/v1.0.0.apk",
+			"releaseNote": [
+				{
+					"name": "Information",
+					"details": [
+						"first release",
+						"provides search with video id, download, background play, PIP play"
+					]
+				}
+			],
+			"releaseDate": "2020-12-31T08:00:00Z"
+		}
+	]
+}

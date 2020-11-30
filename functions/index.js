@@ -2,6 +2,8 @@
 
 const functions = require('firebase-functions');
 const https = require('https');
+const express = require('express');
+const cors = require('cors')({origin: true});
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const YTSearcher = require('./util/script-searcher.js');
@@ -10,13 +12,15 @@ const YTSearcher = require('./util/script-searcher.js');
 admin.initializeApp();
 
 const db = admin.firestore();
+const app = express();
 
-exports.getYtInfo = functions.https.onRequest(async (req, res) => {
+app.use(cors);
+app.get('/ytinfo/:vid', async(req, res) => {
 	const currentTime = Date.now();
-	const vid = req.query.v;
+	const vid = req.params.vid;
 	if (!vid || typeof vid !== 'string') {
 		functions.logger.info('no vid');
-		res.status(400).json({message: 'absence of argument \'v\''});
+		res.status(400).json({message: 'absence of argument \'vid\''});
 		return;
 	}
 	const responseDocRef = db.collection('yt_info_response').doc(vid);
@@ -184,3 +188,9 @@ exports.getYtInfo = functions.https.onRequest(async (req, res) => {
 		return;
 	}
 });
+
+app.all('*', (req, res) => {
+	res.status(400).send('No such API / not allowed');
+})
+
+exports.api = functions.https.onRequest(app);
