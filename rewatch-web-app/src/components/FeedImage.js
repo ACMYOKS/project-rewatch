@@ -1,7 +1,7 @@
 function FeedImage(props) {
-	const src = props.src ?? '';
+	const src = props.src || '';
 	const caption = props.caption;
-	const alt = props.alt ?? '';
+	const alt = props.alt || '';
 	return (
 		<div className={props.className}>
 			<figure

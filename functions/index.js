@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const functions = require('firebase-functions');
 const https = require('https');
 const express = require('express');
@@ -8,14 +9,24 @@ const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 const YTSearcher = require('./util/script-searcher.js');
 
-// admin.initializeApp(functions.config().firebase);
-admin.initializeApp();
+admin.initializeApp(functions.config().firebase);
 
 const db = admin.firestore();
 const app = express();
 
+const requestLogger = (req, res, next) => {
+	functions.logger.info({
+		request: `${req.method} ${req.path}`,
+		query: req.query,
+		params: req.params,
+		body: req.body
+	});
+	next();
+};
+
 app.use(cors);
-app.get('/ytinfo/:vid', async(req, res) => {
+
+app.get('/ytinfo/:vid', requestLogger, async(req, res) => {
 	const currentTime = Date.now();
 	const vid = req.params.vid;
 	if (!vid || typeof vid !== 'string') {
@@ -33,7 +44,7 @@ app.get('/ytinfo/:vid', async(req, res) => {
 					`response for ${vid} expires, lastUpdateTime: ${response.lastUpdateTime}, currentTime: ${currentTime}`
 				);
 			} else {
-				if (typeof response.statusCode !== "undefined" && typeof typeof response.message !== "undefined") {
+				if (typeof response.statusCode !== "undefined" && typeof response.message !== "undefined") {
 					// is an error
 					functions.logger.info(`hit response cache for ${vid}, is an error`);
 					res.status(response.statusCode).json({statusCode: response.statusCode, message: response.message});
@@ -132,7 +143,7 @@ app.get('/ytinfo/:vid', async(req, res) => {
 				const decrypter = new YTSearcher.Decrypter(codes);
 				formats.forEach((f) => {
 					if (f.mimeType && f.mimeType.includes('mp4')) {
-						const cipher = f.signatureCipher ?? f.cipher;
+						const cipher = f.signatureCipher || f.cipher;
 						if (cipher) {
 							try {
 								const resultUrl = decrypter.getDecryptedUrl(cipher);
@@ -145,7 +156,7 @@ app.get('/ytinfo/:vid', async(req, res) => {
 				});
 				aFormats.forEach((f) => {
 					if (f.mimeType && f.mimeType.includes('mp4')) {
-						const cipher = f.signatureCipher ?? f.cipher;
+						const cipher = f.signatureCipher || f.cipher;
 						if (cipher) {
 							try {
 								const resultUrl = decrypter.getDecryptedUrl(cipher);
@@ -189,8 +200,74 @@ app.get('/ytinfo/:vid', async(req, res) => {
 	}
 });
 
-app.all('*', (req, res) => {
-	res.status(400).send('No such API / not allowed');
+app.get('/archives/:version?', requestLogger, async (req, res) => {
+	try {
+		let archiveRef = await db.collection('app_info').doc('version-manifest.json').get();
+		if (archiveRef.exists) {
+			let archiveInfo = archiveRef.data();
+			const version = req.params.version;
+			if (version && typeof version === 'string') {
+				let target = archiveInfo.releaseList.find(item => item.version === version);
+				if (target) {
+					res.status(200).json(target);
+				} else {
+					res.status(404).json({statusCode: 404, message: 'No such version'});
+				}
+				return;
+			}
+			res.status(200).json(archiveInfo);
+		} else {
+			functions.logger.error({
+				err: 'version-manifest.json does not exists'
+			});
+			res.status(500).json({statusCode: 500, message: 'version-manifest.json does not exists'});
+		}
+	} catch (err) {
+		functions.logger.error({
+			err: err.message
+		});
+		res.status(500).json({statusCode: 500, message: err.message});
+	}
+});
+
+app.get('/app_version_update', requestLogger, async (req, res) => {
+	try {
+		let archiveRef = await db.collection('app_info').doc('version-manifest.json').get();
+		if (archiveRef.exists) {
+			let archiveInfo = archiveRef.data();
+			const currentVersion = req.query.currentVersion;
+			if (!currentVersion || typeof currentVersion !== 'string') {
+				res.status(400).json({statusCode: 400, message: 'Please provide "currentVersion"'});
+				return;
+			}
+			if (currentVersion === archiveInfo.latestVersion) {
+				res.status(200).json({message: 'You are up to date'});
+			} else {
+				let target = archiveInfo.releaseList.find(item => item.version === archiveInfo.latestVersion);
+				if (target) {
+					res.status(200).json({target: target});
+				} else {
+					res.status(404).json({statusCode: 404, message: 'No such version'});
+				}
+			}
+		} else {
+			functions.logger.error({
+				err: 'version-manifest.json does not exists'
+			});
+			res.status(500).json({statusCode: 500, message: 'version-manifest.json does not exists'});
+		}
+	} catch (err) {
+		functions.logger.error({
+			err: err.message
+		});
+		res.status(500).json({statusCode: 500, message: err.message});
+	}
 })
 
-exports.api = functions.https.onRequest(app);
+app.all('*', requestLogger, (req, res) => {
+	res.status(400).json({statusCode: 400, message: 'No such API / not allowed'});
+});
+
+exports.api = functions
+	.region('asia-east2')
+	.https.onRequest(app);

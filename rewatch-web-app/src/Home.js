@@ -3,13 +3,14 @@ import YtInfoSearcher from './YtInfoSearcher.js';
 import FeedImage from './components/FeedImage.js';
 import FeatureItem from './components/FeatureItem.js';
 import logo from './logo.svg';
+import { getApiUrl } from './util/api.js';
 
 function Home() {
 
 	const [latestAppInfo, setLatestAppInfo] = useState(null);
 
 	useEffect(() => {
-		fetch(process.env.PUBLIC_URL + '/archive/version-manifest.json')
+		fetch(getApiUrl() + '/archives')
 		.then(res => res.json())
 		.then(json => {
 			const latestVersionCode = json.latestVersionCode;

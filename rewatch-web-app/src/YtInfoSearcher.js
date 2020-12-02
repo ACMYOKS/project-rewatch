@@ -47,7 +47,7 @@ function YtInfoSearcher() {
 		return (
 			list.map((e) => (
 					<React.Fragment>
-						<a href={e.url}>{YouTubeITag[e.itag] ?? 'unsupported'}</a>
+						<a href={e.url}>{YouTubeITag[e.itag] || 'unsupported'}</a>
 						<br />
 					</React.Fragment>
 				)

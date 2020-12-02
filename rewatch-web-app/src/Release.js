@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getApiUrl } from './util/api.js';
 
 function Release() {
 
@@ -50,7 +51,7 @@ function Release() {
 	const [releases, setReleases] = useState(null);
 
 	useEffect(() => {
-		fetch(process.env.PUBLIC_URL + '/archive/version-manifest.json')
+		fetch(getApiUrl() + '/archives')
 			.then(res => res.json())
 			.then(json => {
 				if (json.releaseList) {

@@ -5,7 +5,7 @@
 		{
 			"version": "1.0.0",
 			"versionCode": 1,
-			"url": "https://project-rewatch.firebaseapp.com/archive/v1.0.0.apk",
+			"url": "gs://project-rewatch.appspot.com/archive/android/v1.0.0.apk",
 			"releaseNote": [
 				{
 					"name": "Information",

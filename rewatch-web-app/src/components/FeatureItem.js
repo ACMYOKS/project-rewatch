@@ -1,8 +1,8 @@
 function FeatureItem(props) {
-	const title = props.title ?? '';
-	const detail = props.detail ?? '';
-	const src = props.src ?? '';
-	const alt = props.alt ?? '';
+	const title = props.title || '';
+	const detail = props.detail || '';
+	const src = props.src || '';
+	const alt = props.alt || '';
 	return (
 		<div className='col-12 my-4'>
 			<div className='row justify-content-around'>
