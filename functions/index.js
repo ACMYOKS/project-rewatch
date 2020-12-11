@@ -201,6 +201,7 @@ app.get('/ytinfo/:vid', requestLogger, async(req, res) => {
 });
 
 app.get('/archives/:version?', requestLogger, async (req, res) => {
+	res.set('Cache-Control', 'public, max-age=86400');
 	try {
 		let archiveRef = await db.collection('app_info').doc('version-manifest.json').get();
 		if (archiveRef.exists) {
@@ -231,6 +232,7 @@ app.get('/archives/:version?', requestLogger, async (req, res) => {
 });
 
 app.get('/app_version_update', requestLogger, async (req, res) => {
+	res.set('Cache-Control', 'public, max-age=600');
 	try {
 		let archiveRef = await db.collection('app_info').doc('version-manifest.json').get();
 		if (archiveRef.exists) {

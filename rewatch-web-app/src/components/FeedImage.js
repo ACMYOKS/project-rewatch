@@ -10,6 +10,7 @@ function FeedImage(props) {
 					className='figure-img img-fluid feed-img'
 					src={src}
 					alt={alt}
+					width={props.width} height={props.height} 
 				/>
 				{caption &&
 					<figcaption

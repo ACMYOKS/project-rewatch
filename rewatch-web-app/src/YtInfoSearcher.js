@@ -1,36 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { secondToReadable, YouTubeITag } from './util/formatters.js';
+import { getApiUrl } from './util/api.js';
 
 function YtInfoSearcher() {
 
 	const [ytInfo, setYtInfo] = useState(null);
-	const [ytError, setYtError] = useState(null);
+	// const [ytError, setYtError] = useState(null);
 	const [userInput, setUserInput] = useState('');
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		console.log(userInput);
 		if (userInput) {
-			fetch(`http://localhost:5001/project-rewatch/asia-east2/api/ytinfo/${userInput}`)
-				.then(res => res.json())
-				.then(json => {
-					console.log(json);
-					if (validateJson(json)) {
-						setYtInfo(json);
-					} else if (json.statusCode === 404) {
-						setYtError(`Cannot find video with id: ${userInput}`);
-					}
-				})
-				.catch(err => {
-					console.log(err);
-				})
+			// https://www.youtube.com/watch?v={videoId}
+			// https://m.youtube.com/watch?v={videoId}
+			// https://youtube.com/watch?v={videoId}
+			// https://youtu.be/{videoId}
+			const matches = [...userInput.matchAll(/^(?:https?:\/\/(?:(?:www\.|m\.)*youtube\.com\/watch\?v=|youtu\.be\/))(?<vid>[\w-]+)$/g)];
+			if (matches.length > 0) {
+				const videoId = matches[0].groups.vid;
+				fetch(`${getApiUrl()}/ytinfo/${videoId}`)
+					.then(res => res.json())
+					.then(json => {
+						console.log(json);
+						if (validateJson(json)) {
+							setYtInfo(json);
+						} else if (json.statusCode === 404) {
+							// setYtError(`Cannot find video with id: ${videoId}`);
+							alert(`Cannot find video with id: ${videoId}`);
+						}
+					})
+					.catch(err => {
+						console.log(err);
+					});
+			} else {
+				alert('Please put link in the following formats:\n'+
+					'https://www.youtube.com/watch?v={videoId}\n' +
+					'https://m.youtube.com/watch?v={videoId}\n' +
+					'https://youtube.com/watch?v={videoId}\n' +
+					'https://youtu.be/{videoId}\n{videoId}');
 			}
+		}
 	}
 
 	const handleClose = (e) => {
 		e.preventDefault();
 		setYtInfo(null);
-		setYtError(null);
+		// setYtError(null);
 	}
 
 	const validateJson = (json) => {
@@ -47,7 +63,7 @@ function YtInfoSearcher() {
 		return (
 			list.map((e) => (
 					<React.Fragment>
-						<a href={e.url}>{YouTubeITag[e.itag] || 'unsupported'}</a>
+						<a href={e.url}>{YouTubeITag[e.itag] || `unsupported itag ${e.itag}`}</a>
 						<br />
 					</React.Fragment>
 				)
@@ -63,7 +79,7 @@ function YtInfoSearcher() {
 					className='form-control'
 					type='search'
 					aria-describedby='btn-submit'
-					placeholder='https://youtu.be/aqz-KE-bpKQ'
+					placeholder='https://youtu.be/{videoId}'
 					onChange={e => {setUserInput(e.target.value)}}
 				/>
 				<div>
@@ -105,13 +121,13 @@ function YtInfoSearcher() {
 				</div>
 			}
 			{
-				ytError !== null &&
-				<div>
-					<button type="button" className="close" aria-label="close" onClick={handleClose}>
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<p>{ytError}</p>
-				</div>
+				// ytError !== null &&
+				// <div>
+				// 	<button type="button" className="close" aria-label="close" onClick={handleClose}>
+				// 		<span aria-hidden="true">&times;</span>
+				// 	</button>
+				// 	<p>{ytError}</p>
+				// </div>
 			}
 		</div>
 	);

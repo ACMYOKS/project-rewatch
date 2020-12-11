@@ -7,10 +7,11 @@ import {
   useLocation
 } from 'react-router-dom';
 import * as qs from 'query-string'; 
-import logo from './logo.svg';
 // import './App.css';
+import logo from './app_logo_no_padding.svg';
 import Home from './Home.js';
 import Guide from './Guide.js';
+import Faq from './Faq.js';
 import Release from './Release.js';
 import NoMatch from './NoMatch.js';
 
@@ -51,8 +52,12 @@ function MainView() {
           </button>
           <div className='navbar-collapse collapse' id='navbarNavAltMarkup'>
             <div className='navbar-nav'>
+              <span className='navbar-brand d-none d-md-block'>
+                <img src={logo} alt='logo' height='32px'/>
+              </span>
               { createLink('/', 'Home') }
               { createLink('/guide', 'Guide') }
+              { createLink('/faq', 'FAQ') }
               { createLink('/releases', 'Releases') }
             </div>
           </div>
@@ -62,6 +67,9 @@ function MainView() {
         <Switch>
           <Route path='/guide'>
             <Guide />
+          </Route>
+          <Route path='/faq'>
+            <Faq />
           </Route>
           <Route path='/releases'>
             <Release />

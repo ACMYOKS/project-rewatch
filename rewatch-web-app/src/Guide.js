@@ -35,14 +35,16 @@ function Guide() {
 					<div className='d-flex flex-wrap justify-content-around'>
 						<FeedImage
 							className='p-2'
-							src={process.env.PUBLIC_URL + '/tutor/channel.png'}
+							src={process.env.PUBLIC_URL + '/tutor/channel01.png'}
 							caption='YouTube subscriptions'
-							alt='YouTube subscriptions'/>
+							alt='YouTube subscriptions'
+							width='200'/>
 						<FeedImage
 							className='p-2'
-							src={process.env.PUBLIC_URL + '/tutor/playlist.png'}
+							src={process.env.PUBLIC_URL + '/tutor/playlist01.png'}
 							caption='Your playlists'
-							alt='Your playlists'/>
+							alt='Your playlists'
+							width='200'/>
 					</div>
 					<p>
 						You cannot update (add/remove/sort/reorder) them through this app.
@@ -65,7 +67,8 @@ function Guide() {
 							className='p-2'
 							src={process.env.PUBLIC_URL + '/tutor/search01.png'}
 							caption='Search video by ID'
-							alt='search function'/>
+							alt='search function'
+							width='200'/>
 					</div>
 					<h4>Search from hyperlink</h4>
 					<p>
@@ -83,7 +86,7 @@ function Guide() {
 					<div className='alert alert-info'>
 						<h5 className='alert-heading'>Note</h5>
 						<p className='mb-0'>
-							You need to change ReWatch Player's <code>setting -> Go to support URLs -> Always ask</code> in order to use this functionality.
+							You need to change ReWatch Player's <code>setting > Go to support URLs > Always ask</code> in order to use this functionality.
 						</p>	
 					</div>
 					<h4>Search with <i>Share</i></h4>
@@ -95,7 +98,8 @@ function Guide() {
 						<FeedImage
 							src={process.env.PUBLIC_URL + '/tutor/search02.png'}
 							caption='Search in app picker'
-							alt='search in app picker'/>
+							alt='search in app picker'
+							width='200'/>
 					</div>
 					<br />
 
@@ -111,12 +115,14 @@ function Guide() {
 						<FeedImage
 							src={process.env.PUBLIC_URL + '/tutor/bookmark01.png'}
 							caption='Bookmark through video card'
-							alt='downloads'/>
+							alt='downloads'
+							width='200'/>
 
 						<FeedImage
 							src={process.env.PUBLIC_URL + '/tutor/bookmark02.png'}
 							caption='Bookmarked videos'
-							alt='PIP mode'/>
+							alt='PIP mode'
+							width='200'/>
 					</div>
 					<br />
 
@@ -130,14 +136,16 @@ function Guide() {
 					</p>
 					<div className='d-flex flex-wrap justify-content-around'>
 						<FeedImage
-							src={process.env.PUBLIC_URL + '/tutor/download01.png'}
+							src={process.env.PUBLIC_URL + '/tutor/download02.png'}
 							caption='Download list'
-							alt='downloads list'/>
+							alt='downloads list'
+							width='200'/>
 
 						<FeedImage
-							src={process.env.PUBLIC_URL + '/tutor/download02.png'}
+							src={process.env.PUBLIC_URL + '/tutor/download03.png'}
 							caption='Download details, including progress and quality'
-							alt='download detail'/>
+							alt='download detail'
+							width='200'/>
 					</div>
 					<p>
 						By default, once the download is completed, the app will play resource offline automatically with the best available quality.
@@ -156,18 +164,20 @@ function Guide() {
 					</p>
 					<div className='d-flex flex-wrap justify-content-around'>
 						<FeedImage
-							src={process.env.PUBLIC_URL + '/tutor/pip.png'}
+							src={process.env.PUBLIC_URL + '/tutor/pip02.png'}
 							caption='PIP mode'
-							alt='PIP mode'/>
+							alt='PIP mode'
+							width='200'/>
 					</div>
 					<p>
 						If you enable background playing feature, the app will continue playing even if you switch off the screen or stop the app.
 					</p>
 					<div className='d-flex flex-wrap justify-content-around'>
 						<FeedImage
-							src={process.env.PUBLIC_URL + '/tutor/background.png'}
+							src={process.env.PUBLIC_URL + '/tutor/background01.png'}
 							caption='Background playing'
-							alt='background play'/>
+							alt='background play'
+							width='200'/>
 					</div>
 				</main>
 			</div>
